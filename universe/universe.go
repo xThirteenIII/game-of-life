@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"gol/constants"
 	"math/rand"
-	"sync"
+	"sync/atomic"
 )
 
 type Cell struct {
@@ -26,7 +26,7 @@ type Universe struct {
 	SpaceTime  [constants.ROW_NUM][constants.COL_NUM]Cell // Fixed size matrix, each element is a Cell
 	Generation uint                                       // Generation number, starting from 0
 	Population uint                                       // Number of alive cells, if it goes to 0, life ends
-	mu         sync.RWMutex                               // mutex for thread-safety write to SpaceTime
+	dies       atomic.Bool
 }
 
 var uni Universe
@@ -105,9 +105,6 @@ func (c Cell) printNeighbours() {
 func SpawnUniverse() {
 	initUniverse()
 	populateUniverse()
-	uni.SpaceTime[1][1].alive = true
-	uni.SpaceTime[1][1].char = "*"
-	uni.SpaceTime[1][1].survives = true
 }
 
 func initUniverse() {

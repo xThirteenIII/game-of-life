@@ -1,6 +1,8 @@
 package universe
 
-import "fmt"
+import (
+	"sync"
+)
 
 /*
 RULES OF GAME OF LIFE:
@@ -16,35 +18,49 @@ RULES OF GAME OF LIFE:
 // Since writing to the universe simoultanously, has sync problems, we should create a new universe with the next gen.
 // Then assign the new universe to the global uni variable.
 func ApplyRules() {
-	fmt.Println("before", uni.SpaceTime[1][1])
 	for i, row := range uni.SpaceTime {
 		for j, _ := range row {
-			uni.mu.Lock()
 			uni.SpaceTime[i][j].survivesNextGen()
-			uni.mu.Unlock()
 		}
 	}
-	fmt.Println("after", uni.SpaceTime[1][1])
 }
 
-func ToNextGen() bool {
-	universeDies := true
-	fmt.Println("next gen")
+func ApplyRulesInParallel(wg *sync.WaitGroup) {
 	for i, row := range uni.SpaceTime {
-		// WARNING: does this modify cells or nope?
-		for j, cell := range row {
-			if cell.survives {
-				universeDies = false
-				uni.SpaceTime[i][j].char = "*"
-				uni.SpaceTime[i][j].alive = true
-			} else {
-				uni.SpaceTime[i][j].char = "_"
-				uni.SpaceTime[i][j].alive = false
-			}
+		for j, _ := range row {
+			wg.Add(1)
+			go func(ii, jj int) {
+				uni.SpaceTime[ii][jj].survivesNextGen()
+				wg.Done()
+			}(i, j) // Closure with i, j ensures copy by value into ii, jj, allowing indipendent write to each Cell
 		}
 	}
+}
+
+func ToNextGen(wg *sync.WaitGroup) bool {
+	uni.dies.Store(true)
+	for i, row := range uni.SpaceTime {
+		for j, _ := range row {
+			wg.Add(1)
+			go func(ii, jj int) {
+				if uni.SpaceTime[ii][jj].survives {
+					// dies is the only shared variable that can be affected by race condition
+					// SpaceTime is also shared, true, but each Cell is indipendent, since the go routines tackle
+					// one each
+					uni.dies.Store(false)
+					uni.SpaceTime[ii][jj].char = "*"
+					uni.SpaceTime[ii][jj].alive = true
+				} else {
+					uni.SpaceTime[ii][jj].char = "_"
+					uni.SpaceTime[ii][jj].alive = false
+				}
+				wg.Done()
+			}(i, j)
+		}
+	}
+	wg.Wait()
 	uni.Generation += 1
-	return universeDies
+	return uni.dies.Load()
 }
 
 func (c *Cell) survivesNextGen() {

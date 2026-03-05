@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"gol/universe"
+	"sync"
 	"time"
 )
 
@@ -18,7 +19,30 @@ RULES OF GAME OF LIFE:
 */
 var tick = 33 * time.Millisecond
 
+// No concurrency version
+
+// func main() {
+// 	wg := sync.WaitGroup{}
+// 	universe.SpawnUniverse()
+// 	universe.PrintUniverse()
+//
+// 	// Let's tick every 5 seconds for now
+// 	// This blocks main routine until we close the channel
+// 	ticker := time.NewTicker(tick)
+// 	for range ticker.C {
+// 		universe.ApplyRules()
+// 		universe.ApplyRulesInParallel(&wg)
+// 		if universe.ToNextGen() {
+// 			fmt.Println("EXTINTION")
+// 			break
+// 		}
+// 		universe.PrintUniverse()
+// 	}
+// }
+
+// Concurrency version
 func main() {
+	wg := sync.WaitGroup{}
 	universe.SpawnUniverse()
 	universe.PrintUniverse()
 
@@ -26,8 +50,9 @@ func main() {
 	// This blocks main routine until we close the channel
 	ticker := time.NewTicker(tick)
 	for range ticker.C {
-		universe.ApplyRules()
-		if universe.ToNextGen() {
+		universe.ApplyRulesInParallel(&wg)
+		wg.Wait()
+		if universe.ToNextGen(&wg) {
 			fmt.Println("EXTINTION")
 			break
 		}
