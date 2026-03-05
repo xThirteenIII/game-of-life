@@ -13,7 +13,7 @@ At each step in time, the following transitions occur:
 - Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.  
 The initial pattern constitutes the seed of the system. The first generation is created by applying the above rules simultaneously to every cell in the seed, live or dead; births and deaths occur simultaneously, and the discrete moment at which this happens is sometimes called a tick
 
-### My take while developing
+## My take while developing
 I'm trying to implement stuff one at a time and verifying everything works correctly. As for now, the decisions to be made are about whether to have 
 methods or pure functions, whether to use value or reference methods and mainly, how to implement the simoultanious calls to every rule.  
 Should I make a copy of the universe each generation, or modify the existing one directly?  
