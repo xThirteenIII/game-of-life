@@ -16,17 +16,21 @@ RULES OF GAME OF LIFE:
     births and deaths occur simultaneously, and the discrete moment at which this happens is sometimes called a tick.
     Each generation is a pure function of the preceding one. The rules continue to be applied repeatedly to create further generations
 */
-var tick = 5 * time.Second
+var tick = 33 * time.Millisecond
 
 func main() {
 	universe.SpawnUniverse()
 	universe.PrintUniverse()
-	uni := universe.GetUniverse()
 
 	// Let's tick every 5 seconds for now
 	// This blocks main routine until we close the channel
 	ticker := time.NewTicker(tick)
-	for _ = range ticker.C {
-		fmt.Println("evolving to next gen...")
+	for range ticker.C {
+		universe.ApplyRules()
+		if universe.ToNextGen() {
+			fmt.Println("EXTINTION")
+			break
+		}
+		universe.PrintUniverse()
 	}
 }

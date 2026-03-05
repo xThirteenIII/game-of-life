@@ -26,7 +26,7 @@ type Universe struct {
 	SpaceTime  [constants.ROW_NUM][constants.COL_NUM]Cell // Fixed size matrix, each element is a Cell
 	Generation uint                                       // Generation number, starting from 0
 	Population uint                                       // Number of alive cells, if it goes to 0, life ends
-	mu         sync.Mutex                                 // mutex for thread-safety write to SpaceTime
+	mu         sync.RWMutex                               // mutex for thread-safety write to SpaceTime
 }
 
 var uni Universe
@@ -105,6 +105,9 @@ func (c Cell) printNeighbours() {
 func SpawnUniverse() {
 	initUniverse()
 	populateUniverse()
+	uni.SpaceTime[1][1].alive = true
+	uni.SpaceTime[1][1].char = "*"
+	uni.SpaceTime[1][1].survives = true
 }
 
 func initUniverse() {
@@ -118,7 +121,7 @@ func initUniverse() {
 
 func populateUniverse() {
 	alive := make([]pos, constants.CELLS_ALIVE_AT_START)
-	for i := 0; i < constants.CELLS_ALIVE_AT_START; i++ {
+	for range constants.CELLS_ALIVE_AT_START {
 		randRow := rand.Intn(constants.ROW_NUM)
 		randCol := rand.Intn(constants.COL_NUM)
 		alive = append(alive, pos{col: randCol, row: randRow})
@@ -133,6 +136,9 @@ func PrintUniverse() {
 	printUniverse()
 }
 func printUniverse() {
+	fmt.Println("---------------------------GEN", uni.Generation, "---------------------------")
+	fmt.Printf("\n\n")
+
 	for i, row := range uni.SpaceTime {
 		for j, _ := range row {
 			fmt.Printf("%s", uni.SpaceTime[i][j].char)
