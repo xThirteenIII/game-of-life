@@ -1,7 +1,8 @@
 # game-of-life
 
 Reading from [Wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life), I'm implementing a version of the Game of Life in Go.  
-No Claude or LLMs used. Just fun stuff!  
+No Claude or LLMs used for coding. Used it for benchmarks and clarify some concepts.
+Just fun!
 
 ## Rules
 The universe of the Game of Life is an infinite, two-dimensional orthogonal grid of square cells, each of which is in one of two possible states,  
@@ -68,5 +69,5 @@ So actually using go routines is a problem, since I'm basically forcing my proce
 
 #### mutex vs atomic
 If like in my case I need to lock just one variable in my data struct (universeDies), I can avoid creating a mutex (heavy) that locks the whole struct,  
-and just use an atomic.Bool variable, that does the job better since by design it's just a 1 CPU instruction, and thus can't be accessed by diff routines.
+and just use an atomic.Bool variable, that does the job better since by design it's just a 1 CPU instruction, and thus can't be partially accessed by other routines.
 
