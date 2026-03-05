@@ -37,7 +37,28 @@ func ApplyRulesInParallel(wg *sync.WaitGroup) {
 	}
 }
 
-func ToNextGen(wg *sync.WaitGroup) bool {
+func ToNextGen() bool {
+	uni.dies.Store(true)
+	for i, row := range uni.SpaceTime {
+		for j, _ := range row {
+			if uni.SpaceTime[i][j].survives {
+				// dies is the only shared variable that can be affected by race condition
+				// SpaceTime is also shared, true, but each Cell is indipendent, since the go routines tackle
+				// one each
+				uni.dies.Store(false)
+				uni.SpaceTime[i][j].char = "*"
+				uni.SpaceTime[i][j].alive = true
+			} else {
+				uni.SpaceTime[i][j].char = "_"
+				uni.SpaceTime[i][j].alive = false
+			}
+		}
+	}
+	uni.Generation += 1
+	return uni.dies.Load()
+}
+
+func ToNextGenInParallel(wg *sync.WaitGroup) bool {
 	uni.dies.Store(true)
 	for i, row := range uni.SpaceTime {
 		for j, _ := range row {

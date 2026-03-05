@@ -50,9 +50,9 @@ func main() {
 	// This blocks main routine until we close the channel
 	ticker := time.NewTicker(tick)
 	for range ticker.C {
-		universe.ApplyRulesInParallel(&wg)
+		universe.ApplyRules()
 		wg.Wait()
-		if universe.ToNextGen(&wg) {
+		if universe.ToNextGen() {
 			fmt.Println("EXTINTION")
 			break
 		}
