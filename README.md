@@ -66,4 +66,7 @@ Worker pools. That is, I use 1 go routine on top of each core of the 20 my AMD R
 So I mistakenly thought that concurrency = speed. That's not the case. The Game of Life has CPU operations, not I/O like web-servers, network APIs, reading from disk, where your process has actually dead time (idle) while waiting for data.
 So actually using go routines is a problem, since I'm basically forcing my processes to do context switch, scheduling, on operations that are very fast since it's the CPU that does them :/ 
 
+#### mutex vs atomic
+If like in my case I need to lock just one variable in my data struct (universeDies), I can avoid creating a mutex (heavy) that locks the whole struct,  
+and just use an atomic.Bool variable, that does the job better since by design it's just a 1 CPU instruction, and thus can't be accessed by diff routines.
 
