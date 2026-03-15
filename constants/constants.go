@@ -1,9 +1,12 @@
 package constants
 
 const (
-	ROW_NUM              = 25
-	COL_NUM              = 100
-	CELLS_ALIVE_AT_START = 300
+	CELLS_ALIVE_AT_START = 100000
 	UNDERPOPULATION_MIN  = 2
 	OVERPOPULATION_MAX   = 3
+	WINDOW_W             = 1000
+	WINDOW_H             = 700
+
+	MIN_PIXELS_PER_SEC = 30
+	MAX_PIXELS_PER_SEC = 60
 )

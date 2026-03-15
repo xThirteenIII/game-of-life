@@ -5,27 +5,23 @@ import (
 	"gol/constants"
 	"math/rand"
 	"sync/atomic"
+
+	"github.com/Zyko0/go-sdl3/sdl"
 )
 
 type Cell struct {
-	Pos      pos
-	char     string
-	alive    bool
+	Point    sdl.FPoint
+	Alive    bool
 	survives bool
-}
-
-type pos struct {
-	row int // row is y
-	col int // col is x
 }
 
 // universe is the universe, duh
 // SpaceTime it's of a fixed size, so there should be no problem
 // about referencing the backing array. We'll see that :D
 type Universe struct {
-	SpaceTime  [constants.ROW_NUM][constants.COL_NUM]Cell // Fixed size matrix, each element is a Cell
-	Generation uint                                       // Generation number, starting from 0
-	Population uint                                       // Number of alive cells, if it goes to 0, life ends
+	SpaceTime  [constants.WINDOW_H][constants.WINDOW_W]Cell // Fixed size matrix, each element is a Cell
+	Generation uint                                         // Generation number, starting from 0
+	Population uint                                         // Number of alive cells, if it goes to 0, life ends
 	dies       atomic.Bool
 }
 
@@ -48,19 +44,19 @@ func (c Cell) getNeighbours() [8]Cell {
 			if i == 0 && j == 0 {
 				continue
 			}
-			deltaX := c.Pos.col + j
-			deltaY := c.Pos.row + i
+			deltaX := int(c.Point.X) + j
+			deltaY := int(c.Point.Y) + i
 			// wraparound, because the Universe is infinite
 			switch deltaX {
 			case -1:
-				deltaX = constants.COL_NUM - 1
-			case constants.COL_NUM:
+				deltaX = constants.WINDOW_W - 1
+			case constants.WINDOW_W:
 				deltaX = 0
 			}
 			switch deltaY {
 			case -1:
-				deltaY = constants.ROW_NUM - 1
-			case constants.ROW_NUM:
+				deltaY = constants.WINDOW_H - 1
+			case constants.WINDOW_H:
 				deltaY = 0
 			}
 			n[index] = uni.SpaceTime[deltaY][deltaX]
@@ -76,17 +72,17 @@ func (c Cell) getNeighbours() [8]Cell {
 func GetCellFromUniverse(x, y int) Cell {
 	if x < 0 {
 		tmp := -x
-		x = constants.ROW_NUM - tmp
+		x = constants.WINDOW_H - tmp
 	}
 	if y < 0 {
 		tmp := -y
-		y = constants.ROW_NUM - tmp
+		y = constants.WINDOW_H - tmp
 	}
-	if x > constants.ROW_NUM-1 {
-		x = x % constants.ROW_NUM
+	if x > constants.WINDOW_H-1 {
+		x = x % constants.WINDOW_H
 	}
-	if y > constants.COL_NUM-1 {
-		y = y % constants.ROW_NUM
+	if y > constants.WINDOW_W-1 {
+		y = y % constants.WINDOW_H
 	}
 	return uni.SpaceTime[x][y]
 }
@@ -98,7 +94,7 @@ func PrintNeighbours(x, y int) {
 func (c Cell) printNeighbours() {
 	n := c.getNeighbours()
 	for i := range 8 {
-		fmt.Printf("[%d %d]", n[i].Pos.row, n[i].Pos.col)
+		fmt.Printf("[%d %d]", n[i].Point.Y, n[i].Point.X)
 	}
 }
 
@@ -110,36 +106,34 @@ func SpawnUniverse() {
 func initUniverse() {
 	for i, row := range uni.SpaceTime {
 		for j, _ := range row {
-			uni.SpaceTime[i][j].char = "_"
-			uni.SpaceTime[i][j].Pos = pos{row: i, col: j}
+			uni.SpaceTime[i][j].Point.Y = float32(i)
+			uni.SpaceTime[i][j].Point.X = float32(j)
+		}
+	}
+}
+
+func UpdatePopulation() {
+	uni.Population = 0
+	for i, row := range uni.SpaceTime {
+		for j, _ := range row {
+			if uni.SpaceTime[i][j].Alive {
+				uni.Population++
+			}
 		}
 	}
 }
 
 func populateUniverse() {
-	alive := make([]pos, constants.CELLS_ALIVE_AT_START)
+	alive := make([]struct{ x, y int }, constants.CELLS_ALIVE_AT_START)
 	for range constants.CELLS_ALIVE_AT_START {
-		randRow := rand.Intn(constants.ROW_NUM)
-		randCol := rand.Intn(constants.COL_NUM)
-		alive = append(alive, pos{col: randCol, row: randRow})
+		randRow := rand.Intn(constants.WINDOW_H)
+		randCol := rand.Intn(constants.WINDOW_W)
+		alive = append(alive, struct {
+			x int
+			y int
+		}{x: randCol, y: randRow})
 	}
 	for _, n := range alive {
-		uni.SpaceTime[n.row][n.col].char = "*"
-		uni.SpaceTime[n.row][n.col].alive = true
-	}
-}
-
-func PrintUniverse() {
-	printUniverse()
-}
-func printUniverse() {
-	fmt.Println("---------------------------GEN", uni.Generation, "---------------------------")
-	fmt.Printf("\n\n")
-
-	for i, row := range uni.SpaceTime {
-		for j, _ := range row {
-			fmt.Printf("%s", uni.SpaceTime[i][j].char)
-		}
-		fmt.Printf("\n")
+		uni.SpaceTime[n.y][n.x].Alive = true
 	}
 }

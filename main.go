@@ -2,9 +2,13 @@ package main
 
 import (
 	"fmt"
+	"gol/constants"
 	"gol/universe"
 	"sync"
 	"time"
+
+	"github.com/Zyko0/go-sdl3/bin/binsdl"
+	"github.com/Zyko0/go-sdl3/sdl"
 )
 
 /*
@@ -41,10 +45,10 @@ var tick = 33 * time.Millisecond
 // }
 
 // Concurrency version
-func main() {
+
+func main1() {
 	wg := sync.WaitGroup{}
 	universe.SpawnUniverse()
-	universe.PrintUniverse()
 
 	// Let's tick every 5 seconds for now
 	// This blocks main routine until we close the channel
@@ -56,6 +60,75 @@ func main() {
 			fmt.Println("EXTINTION")
 			break
 		}
-		universe.PrintUniverse()
 	}
+}
+
+const (
+	WindowWidth  = 1000
+	WindowHeight = 700
+
+	NumPoints          = 500
+	MinPixelsPerSecond = 30
+	MaxPixelsPerSecond = 60
+)
+
+var (
+	points   [constants.CELLS_ALIVE_AT_START]sdl.FPoint
+	lastTime uint64
+)
+
+func main() {
+	defer binsdl.Load().Unload() // sdl.LoadLibrary(sdl.Path())
+	defer sdl.Quit()
+
+	if err := sdl.Init(sdl.INIT_VIDEO); err != nil {
+		panic(err)
+	}
+
+	window, renderer, err := sdl.CreateWindowAndRenderer("Hello world", WindowWidth, WindowHeight, 0)
+	if err != nil {
+		panic(err)
+	}
+	defer renderer.Destroy()
+	defer window.Destroy()
+
+	universe.SpawnUniverse()
+	universe.UpdatePopulation()
+	fmt.Println("Pre", universe.GetUniverse().Population)
+
+	sdl.RunLoop(func() error {
+		var event sdl.Event
+
+		for sdl.PollEvent(&event) {
+			// Close window with q
+			if event.KeyboardEvent().Key == sdl.K_Q {
+				return sdl.EndLoop
+			}
+			// Close window with cmd+q
+			if event.Type == sdl.EVENT_QUIT {
+				return sdl.EndLoop
+			}
+		}
+
+		// Advance to next gen
+		universe.ApplyRules()
+		universe.ToNextGen()
+		universe.UpdatePopulation()
+
+		renderer.SetDrawColor(0, 0, 0, 255)
+		renderer.Clear()
+		renderer.SetDrawColor(255, 255, 255, 255)
+		for _, row := range universe.GetUniverse().SpaceTime {
+			for _, cell := range row {
+				if cell.Alive {
+					renderer.RenderPoint(cell.Point.X, cell.Point.Y)
+				}
+			}
+		}
+
+		//renderer.DebugText(50, 50, "Hello world")
+		renderer.Present()
+
+		return nil
+	})
 }

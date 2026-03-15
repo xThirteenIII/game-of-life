@@ -46,11 +46,9 @@ func ToNextGen() bool {
 				// SpaceTime is also shared, true, but each Cell is indipendent, since the go routines tackle
 				// one each
 				uni.dies.Store(false)
-				uni.SpaceTime[i][j].char = "*"
-				uni.SpaceTime[i][j].alive = true
+				uni.SpaceTime[i][j].Alive = true
 			} else {
-				uni.SpaceTime[i][j].char = "_"
-				uni.SpaceTime[i][j].alive = false
+				uni.SpaceTime[i][j].Alive = false
 			}
 		}
 	}
@@ -69,11 +67,9 @@ func ToNextGenInParallel(wg *sync.WaitGroup) bool {
 					// SpaceTime is also shared, true, but each Cell is indipendent, since the go routines tackle
 					// one each
 					uni.dies.Store(false)
-					uni.SpaceTime[ii][jj].char = "*"
-					uni.SpaceTime[ii][jj].alive = true
+					uni.SpaceTime[ii][jj].Alive = true
 				} else {
-					uni.SpaceTime[ii][jj].char = "_"
-					uni.SpaceTime[ii][jj].alive = false
+					uni.SpaceTime[ii][jj].Alive = false
 				}
 				wg.Done()
 			}(i, j)
@@ -86,11 +82,11 @@ func ToNextGenInParallel(wg *sync.WaitGroup) bool {
 
 func (c *Cell) survivesNextGen() {
 	numAlive := c.getAliveNeighbours()
-	if !c.alive && numAlive == 3 {
+	if !c.Alive && numAlive == 3 {
 		c.survives = true
 		return
 	}
-	if c.alive && numAlive == 2 || c.alive && numAlive == 3 {
+	if c.Alive && numAlive == 2 || c.Alive && numAlive == 3 {
 		c.survives = true
 		return
 	}
@@ -101,7 +97,7 @@ func (c Cell) getAliveNeighbours() int {
 	livingN := 0
 	neighbours := c.getNeighbours()
 	for _, n := range neighbours {
-		if n.alive {
+		if n.Alive {
 			livingN++
 		}
 	}
