@@ -104,6 +104,9 @@ func SpawnUniverse() {
 }
 
 func initUniverse() {
+	uni.Generation = 0
+	uni.Population = 0
+	uni.SpaceTime = [constants.WINDOW_H][constants.WINDOW_W]Cell{}
 	for i, row := range uni.SpaceTime {
 		for j, _ := range row {
 			uni.SpaceTime[i][j].Point.Y = float32(i)
